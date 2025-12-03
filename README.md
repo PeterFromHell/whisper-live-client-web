@@ -88,6 +88,7 @@ uv run python transcribe.py
 - 字幕視窗始終顯示在最上層（包括全螢幕應用上方）
 - 半透明背景，不會過度遮擋簡報內容
 - 可拖動調整位置
+- 可自訂視窗大小、字體大小、顏色
 - 使用 Apple Silicon GPU 加速
 
 ### 快速開始
@@ -112,6 +113,21 @@ uv run python floating_subtitle_native.py
 3. 開啟簡報軟體並進入全螢幕模式
 4. 開始說中文，英文翻譯會即時顯示
 5. 按 `Ctrl+C` 結束程式
+
+### 自訂設定
+
+編輯 `floating_subtitle_native.py` 開頭的設定：
+
+```python
+# 視窗設定
+WINDOW_WIDTH_RATIO = 0.8      # 視窗寬度佔螢幕比例
+WINDOW_HEIGHT = 100           # 視窗高度 (像素)
+WINDOW_OPACITY = 0.85         # 視窗透明度
+
+# 文字設定
+FONT_SIZE = 28                # 字體大小
+TEXT_COLOR = "white"          # 文字顏色：white / yellow / green / cyan
+```
 
 ---
 
