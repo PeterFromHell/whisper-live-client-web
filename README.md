@@ -7,29 +7,133 @@
 - ✅ 即時語音轉文字（Transcribe）
 - ✅ 即時語音翻譯成英文（Translate）
 - ✅ Apple Silicon GPU 加速（MLX 版本）
-- ✅ **浮動字幕視窗** - 適用於全螢幕簡報時顯示即時翻譯
+- ✅ **自訂模型轉換** - 支援 HuggingFace 上的任何 Whisper 模型
+- ✅ **浮動字幕視窗** - 適用於全螢幕簡報時顯示即時字幕
 
-## 三種版本
+## 版本比較
 
 | 版本 | 目錄 | 運算 | 特性 |
 |------|------|------|------|
 | WhisperLive | `/` (根目錄) | CPU | 即時串流，邊說邊顯示 |
-| MLX Whisper | `/mlx` | Apple GPU | 更快速度，說完才辨識 |
+| MLX Whisper | `/mlx` | Apple GPU | 更快速度，說完才辨識，支援自訂模型 |
 | 浮動字幕 | `/mlx/subtitle` | Apple GPU | 全螢幕簡報時顯示字幕 |
 
-**建議：** 如果你有 Apple Silicon Mac，推薦使用 `mlx/` 目錄的 MLX 版本，速度更快。
+**建議：** 如果你有 Apple Silicon Mac，推薦使用 `mlx/` 目錄的 MLX 版本，速度更快且支援自訂模型。
+
+---
+
+## MLX Whisper 版本（Apple GPU）⚡ 推薦
+
+使用 Apple Silicon GPU 加速，支援轉換和使用 HuggingFace 上的任何 Whisper 模型。
+
+### 快速開始
+
+```bash
+# 安裝系統依賴
+brew install ffmpeg portaudio
+
+# 設置環境
+cd whisper-live-client/mlx
+uv venv
+uv pip install mlx-whisper pyaudio numpy
+```
+
+### 轉換自訂模型
+
+可以將 HuggingFace 上的 Whisper 模型轉換為 MLX 格式：
+
+```bash
+cd convert
+
+# 轉換模型（例如臺灣客語模型）
+./convert.sh formospeech/whisper-large-v2-taiwanese-hakka-v1
+
+# 轉換其他模型
+./convert.sh openai/whisper-large-v3
+```
+
+轉換後的模型存放在 `models/` 目錄。
+
+### 即時語音辨識
+
+```bash
+# 基本使用（自動偵測語言）
+uv run python realtime.py
+
+# 列出可用模型
+uv run python realtime.py --list
+
+# 指定模型
+uv run python realtime.py --model whisper-large-v2-taiwanese-hakka-v1-mlx
+
+# 翻譯成英文
+uv run python realtime.py --task translate
+
+# 指定語言
+uv run python realtime.py --language zh
+```
+
+### 參數說明
+
+| 參數 | 簡寫 | 說明 | 預設值 |
+|------|------|------|--------|
+| `--model` | `-m` | 模型名稱或路徑 | 第一個可用模型 |
+| `--task` | `-t` | `transcribe`（轉錄）或 `translate`（翻譯成英文）| `transcribe` |
+| `--language` | `-l` | 語言代碼（zh, en, ja...）| 自動偵測 |
+| `--list` | | 列出可用模型 | |
+
+👉 詳細說明請看 [mlx/README.md](mlx/README.md)
+
+---
+
+## 浮動字幕視窗（簡報用）🎤
+
+適用於 Google Slides、PowerPoint、Keynote 等全螢幕簡報時，即時顯示字幕。
+
+### 特色
+
+- 字幕視窗始終顯示在最上層（包括全螢幕應用上方）
+- 半透明背景，不會過度遮擋簡報內容
+- 可拖動調整位置
+- 可自訂視窗大小、字體大小、顏色
+- 支援本地轉換的模型
+
+### 快速開始
+
+```bash
+cd whisper-live-client/mlx/subtitle
+uv venv
+uv pip install mlx-whisper pyaudio numpy pyobjc-framework-Cocoa
+
+# 基本使用
+uv run python subtitle.py
+
+# 指定模型和任務
+uv run python subtitle.py -m whisper-large-v2-taiwanese-hakka-v1-mlx -t transcribe
+```
+
+### 簡報流程
+
+1. 先轉換模型（如果還沒有的話）
+2. 啟動字幕程式，等待顯示「準備就緒」
+3. 拖動字幕視窗到適合的位置（例如螢幕底部）
+4. 開啟簡報軟體並進入全螢幕模式
+5. 開始說話，字幕會即時顯示
+6. 按 `Ctrl+C` 結束程式
+
+👉 詳細說明請看 [mlx/subtitle/README.md](mlx/subtitle/README.md)
 
 ---
 
 ## WhisperLive 版本（CPU）
 
+使用 CPU 運算，特色是「邊說邊顯示」的即時串流效果。
+
 ### 設置步驟
 
 ```bash
-# 安裝 PortAudio
 brew install portaudio
 
-# 建立虛擬環境並安裝依賴
 cd whisper-live-client
 uv venv
 uv pip install whisper-live pyaudio
@@ -45,88 +149,12 @@ uv run python server.py
 ```
 
 **啟動客戶端（終端視窗 2）：**
-
 ```bash
 # 中文翻譯成英文
 uv run python transcribe.py
 
 # 純中文轉錄（不翻譯）
 uv run python transcribe_only.py
-```
-
----
-
-## MLX Whisper 版本（Apple GPU）⚡
-
-👉 詳細說明請看 [mlx/README.md](mlx/README.md)
-
-### 快速開始
-
-```bash
-# 安裝依賴
-brew install ffmpeg portaudio
-
-# 設置環境
-cd whisper-live-client/mlx
-uv venv
-uv pip install mlx-whisper pyaudio numpy
-
-# 執行（不需要啟動伺服器）
-uv run python transcribe.py
-```
-
----
-
-## 浮動字幕視窗（簡報用）🎤
-
-適用於使用 Google Slides、PowerPoint、Keynote 等全螢幕簡報時，即時顯示英文翻譯字幕。
-
-👉 詳細說明請看 [mlx/subtitle/README.md](mlx/subtitle/README.md)
-
-### 特色
-
-- 字幕視窗始終顯示在最上層（包括全螢幕應用上方）
-- 半透明背景，不會過度遮擋簡報內容
-- 可拖動調整位置
-- 可自訂視窗大小、字體大小、顏色
-- 使用 Apple Silicon GPU 加速
-
-### 快速開始
-
-```bash
-# 安裝依賴
-brew install ffmpeg portaudio
-
-# 設置環境
-cd whisper-live-client/mlx/subtitle
-uv venv
-uv pip install mlx-whisper pyaudio numpy pyobjc-framework-Cocoa
-
-# 執行
-uv run python floating_subtitle_native.py
-```
-
-### 簡報流程
-
-1. 啟動字幕程式，等待顯示「準備就緒」
-2. 拖動字幕視窗到適合的位置（例如螢幕底部）
-3. 開啟簡報軟體並進入全螢幕模式
-4. 開始說中文，英文翻譯會即時顯示
-5. 按 `Ctrl+C` 結束程式
-
-### 自訂設定
-
-編輯 `floating_subtitle_native.py` 開頭的設定：
-
-```python
-# 視窗設定
-WINDOW_WIDTH_RATIO = 0.8      # 視窗寬度佔螢幕比例
-WINDOW_HEIGHT = 100           # 視窗高度 (像素)
-WINDOW_OPACITY = 0.85         # 視窗透明度
-
-# 文字設定
-FONT_SIZE = 28                # 字體大小
-TEXT_COLOR = "white"          # 文字顏色：white / yellow / green / cyan
 ```
 
 ---
@@ -145,17 +173,27 @@ TEXT_COLOR = "white"          # 文字顏色：white / yellow / green / cyan
 
 ---
 
-## 模型大小
+## 支援的模型
 
-### MLX 版本模型
+### 本地轉換模型
+
+可以轉換 HuggingFace 上的任何 Whisper 模型：
+
+| 模型 | 說明 |
+|------|------|
+| `formospeech/whisper-large-v2-taiwanese-hakka-v1` | 臺灣客語 |
+| `openai/whisper-large-v3` | OpenAI 官方最新模型 |
+| 其他 Whisper 微調模型 | 都可以轉換使用 |
+
+### MLX 社群模型（自動下載）
 
 ⚠️ **重要：turbo 版本不支援翻譯功能！**
 
-| 模型 | 大小 | 翻譯支援 | 說明 |
-|------|------|----------|------|
-| `mlx-community/whisper-large-v3-mlx` | ~3 GB | ✅ 支援 | 翻譯功能推薦 |
-| `mlx-community/whisper-large-v3-turbo` | ~1.6 GB | ❌ 不支援 | 只能轉錄，速度快 |
-| `mlx-community/whisper-small` | ~488 MB | ✅ 支援 | 一般使用 |
+| 模型 | 大小 | 翻譯支援 |
+|------|------|----------|
+| `mlx-community/whisper-large-v3-mlx` | ~3 GB | ✅ 支援 |
+| `mlx-community/whisper-large-v3-turbo` | ~1.6 GB | ❌ 不支援 |
+| `mlx-community/whisper-small` | ~488 MB | ✅ 支援 |
 
 ### WhisperLive 版本模型
 
@@ -167,8 +205,6 @@ TEXT_COLOR = "white"          # 文字顏色：white / yellow / green / cyan
 | `medium` | ~1.5 GB | 較慢 | 很好 |
 | `large-v3` | ~3 GB | 最慢 | 最好 |
 
-首次使用新模型時會自動下載。
-
 ---
 
 ## 語言代碼
@@ -179,7 +215,8 @@ TEXT_COLOR = "white"          # 文字顏色：white / yellow / green / cyan
 | 英文 | `en` |
 | 日文 | `ja` |
 | 韓文 | `ko` |
-| 自動偵測 | 不設定 `lang` 參數 |
+| 臺灣客語 | `zh`（使用專用模型）|
+| 自動偵測 | 不設定語言參數 |
 
 ---
 
@@ -197,51 +234,49 @@ uv run python test_mic.py
 1. 檢查 **系統設定** → **隱私與安全性** → **麥克風** → 確認終端機有權限
 2. 檢查 **系統設定** → **聲音** → **輸入** → 確認選對麥克風且音量足夠
 
-### Port 9090 被佔用（WhisperLive 版本）
-
-```bash
-# 方法 1：使用清理腳本
-./kill_server.sh
-
-# 方法 2：手動指令
-lsof -ti:9090 | xargs kill -9
-```
-
 ### 確認 MLX 版本有使用 GPU
 
 執行時打開「活動監視器」→「GPU」分頁，應該會看到 Python 正在使用 GPU。
 
-### 字幕沒有顯示在全螢幕上方
+### Port 9090 被佔用（WhisperLive 版本）
 
-請使用 `floating_subtitle_native.py` 版本，它使用 macOS 原生 API 確保視窗層級。
+```bash
+./kill_server.sh
+# 或
+lsof -ti:9090 | xargs kill -9
+```
 
 ---
 
-## 檔案說明
+## 目錄結構
 
-### WhisperLive 版本（根目錄）
-
-| 檔案 | 說明 |
-|------|------|
-| `server.py` | WhisperLive 伺服器 |
-| `transcribe.py` | 客戶端：中文 → 英文翻譯 |
-| `transcribe_only.py` | 客戶端：純轉錄（不翻譯） |
-| `test_mic.py` | 麥克風測試工具 |
-| `kill_server.sh` | 清理 port 9090 腳本 |
-
-### MLX 版本（mlx/ 目錄）
-
-| 檔案 | 說明 |
-|------|------|
-| `transcribe.py` | 中文 → 英文翻譯（GPU 加速） |
-| `transcribe_only.py` | 純轉錄（GPU 加速） |
-
-### 浮動字幕（mlx/subtitle/ 目錄）
-
-| 檔案 | 說明 |
-|------|------|
-| `floating_subtitle_native.py` | macOS 原生版（推薦，支援全螢幕） |
-| `floating_subtitle.py` | tkinter 版（備用） |
+```
+whisper-live-client/
+├── README.md
+├── server.py              # WhisperLive 伺服器
+├── transcribe.py          # WhisperLive 客戶端（翻譯）
+├── transcribe_only.py     # WhisperLive 客戶端（轉錄）
+├── test_mic.py            # 麥克風測試
+├── kill_server.sh         # 清理 port 9090
+│
+└── mlx/                   # MLX 版本（Apple GPU）
+    ├── README.md
+    ├── realtime.py        # 🎤 即時語音辨識
+    ├── transcribe.py      # 翻譯（HF 模型）
+    ├── transcribe_only.py # 轉錄（HF 模型）
+    │
+    ├── convert/           # 模型轉換工具
+    │   ├── convert.sh     # 轉換腳本
+    │   ├── convert.py     # Python 轉換程式
+    │   └── README.md
+    │
+    ├── models/            # 轉換後的模型
+    │   └── {model}-mlx/
+    │
+    └── subtitle/          # 🖥️ 浮動字幕視窗
+        ├── subtitle.py    # 字幕程式
+        └── README.md
+```
 
 ---
 

@@ -31,3 +31,9 @@ output.srt
 
 # Whisper model cache
 .cache/
+
+# MLX model weights (too large for git)
+mlx/models/*/weights.npz
+
+# Debug files
+mlx/debug_weights.py
